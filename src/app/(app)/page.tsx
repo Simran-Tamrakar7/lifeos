@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/page";
 import { useLifeOSStore } from "@/stores/use-lifeos-store";
@@ -24,6 +26,17 @@ const fade = {
 
 export default function DashboardPage() {
   const hydrated = useLifeOSStore((s) => s.hydrated);
+  const defaultView = useLifeOSStore((s) => s.settings.defaultView ?? "today");
+  const router = useRouter();
+
+  // ponytail: one-shot home redirect per session; Dashboard nav still works after
+  useEffect(() => {
+    if (!hydrated || defaultView === "today") return;
+    if (typeof sessionStorage === "undefined") return;
+    if (sessionStorage.getItem("lifeos:home-view")) return;
+    sessionStorage.setItem("lifeos:home-view", "1");
+    router.replace(defaultView === "tasks" ? "/tasks" : "/calendar");
+  }, [hydrated, defaultView, router]);
 
   if (!hydrated) {
     return (

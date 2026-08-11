@@ -3,12 +3,14 @@
 import { useMemo } from "react";
 import { groupTasks, TASK_GROUP_META, type TaskGroupKey } from "@/lib/task-groups";
 import { TaskListView } from "@/components/tasks/task-list-view";
+import { useLifeOSStore } from "@/stores/use-lifeos-store";
 import type { Task } from "@/types";
 
 const ORDER: TaskGroupKey[] = ["today", "week", "upcoming", "nodate"];
 
 export function TaskAgendaGroups({ tasks }: { tasks: Task[] }) {
-  const groups = useMemo(() => groupTasks(tasks), [tasks]);
+  const weekStartsOn = useLifeOSStore((s) => s.settings.weekStartsOn ?? 1);
+  const groups = useMemo(() => groupTasks(tasks, weekStartsOn), [tasks, weekStartsOn]);
 
   return (
     <div className="space-y-8">

@@ -151,6 +151,8 @@ export interface Note {
   content: string;
   folderId?: string;
   categoryId?: string;
+  /** Calendar date for the note (yyyy-MM-dd) */
+  date?: string;
   tags: string[];
   pinned?: boolean;
   favorite?: boolean;
@@ -321,10 +323,12 @@ export interface UserSettings {
   wallpaper?: string;
   notifications: boolean;
   compactMode: boolean;
-  /** Ledger warm paper cream instead of cool light */
+  /** Warm paper cream instead of ink navy */
   daylightMode?: boolean;
-  /** Larger serif display headings */
-  serifDisplay?: boolean;
+  /** 0 = Sunday, 1 = Monday */
+  weekStartsOn?: 0 | 1;
+  /** Preferred home surface */
+  defaultView?: "today" | "tasks" | "calendar";
   reducedMotion?: boolean;
   highContrast?: boolean;
 }

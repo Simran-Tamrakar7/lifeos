@@ -1,10 +1,9 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { useEffect } from "react";
 import { toast } from "sonner";
 import { useLifeOSStore } from "@/stores/use-lifeos-store";
-import type { AccentColor, ThemeMode } from "@/types";
+import type { AccentColor } from "@/types";
 import { PageHeader } from "@/components/ui/page";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,16 +48,9 @@ export default function SettingsPage() {
   const level = useLifeOSStore((s) => s.level);
   const { setTheme } = useTheme();
 
-  useEffect(() => {
-    document.documentElement.classList.toggle("daylight", !!settings.daylightMode);
-    document.documentElement.classList.toggle("serif-display", settings.serifDisplay !== false);
-    document.documentElement.classList.toggle("reduce-motion", !!settings.reducedMotion);
-    document.documentElement.classList.toggle("high-contrast", !!settings.highContrast);
-  }, [settings.daylightMode, settings.serifDisplay, settings.reducedMotion, settings.highContrast]);
-
-  const setThemeMode = (theme: ThemeMode) => {
-    updateSettings({ theme });
-    setTheme(theme);
+  const setDaylight = (on: boolean) => {
+    updateSettings({ daylightMode: on, theme: on ? "light" : "dark" });
+    setTheme(on ? "light" : "dark");
   };
 
   const download = () => {
@@ -103,43 +95,17 @@ export default function SettingsPage() {
         <Card className="glass">
           <CardHeader>
             <CardTitle className="font-display">Appearance</CardTitle>
-            <CardDescription>Fonts, ink accents, and display density.</CardDescription>
+            <CardDescription>Ledger Fraunces · Public Sans · ink navy / daylight.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div>
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]">Theme</p>
-              <div className="flex flex-wrap gap-2">
-                {(["light", "dark", "system"] as ThemeMode[]).map((t) => (
-                  <Button key={t} size="sm" variant={settings.theme === t ? "default" : "secondary"} onClick={() => setThemeMode(t)} className="capitalize">
-                    {t}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <label className="flex items-center justify-between gap-3 text-sm">
+            <label className="flex items-center justify-between gap-3 ledger-rule py-3 text-sm">
               <div>
                 <p className="font-medium">Daylight mode</p>
-                <p className="text-xs text-[var(--fg-muted)]">Warm paper cream instead of cool light</p>
+                <p className="text-xs text-[var(--fg-muted)]">
+                  Warm paper cream instead of ink navy
+                </p>
               </div>
-              <Switch
-                checked={!!settings.daylightMode}
-                onCheckedChange={(v) => {
-                  updateSettings({ daylightMode: v });
-                  if (v) setThemeMode("light");
-                }}
-              />
-            </label>
-
-            <label className="flex items-center justify-between gap-3 text-sm">
-              <div>
-                <p className="font-medium">Serif display</p>
-                <p className="text-xs text-[var(--fg-muted)]">Fraunces headings (Ledger look)</p>
-              </div>
-              <Switch
-                checked={settings.serifDisplay !== false}
-                onCheckedChange={(v) => updateSettings({ serifDisplay: v })}
-              />
+              <Switch checked={!!settings.daylightMode} onCheckedChange={setDaylight} />
             </label>
 
             <div>
@@ -156,7 +122,6 @@ export default function SettingsPage() {
                   />
                 ))}
               </div>
-              <p className="mt-2 text-xs capitalize text-[var(--fg-muted)]">Accent: {settings.accent}</p>
             </div>
 
             <div>
@@ -169,7 +134,6 @@ export default function SettingsPage() {
                   </div>
                 ))}
               </div>
-              <p className="mt-2 text-xs text-[var(--fg-muted)]">Used by categories across notes, tasks, and meetings.</p>
             </div>
 
             <label className="flex items-center justify-between text-sm">
@@ -184,6 +148,46 @@ export default function SettingsPage() {
               High contrast
               <Switch checked={!!settings.highContrast} onCheckedChange={(v) => updateSettings({ highContrast: v })} />
             </label>
+          </CardContent>
+        </Card>
+
+        <Card className="glass">
+          <CardHeader>
+            <CardTitle className="font-display">Calendar</CardTitle>
+            <CardDescription>Week start and preferred home view.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-1">
+            <div className="flex items-center justify-between ledger-rule py-3 text-sm">
+              <span className="font-medium">Week starts on</span>
+              <select
+                className="h-9 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-2 text-sm"
+                value={settings.weekStartsOn ?? 1}
+                onChange={(e) =>
+                  updateSettings({
+                    weekStartsOn: Number(e.target.value) as 0 | 1,
+                  })
+                }
+              >
+                <option value={0}>Sunday</option>
+                <option value={1}>Monday</option>
+              </select>
+            </div>
+            <div className="flex items-center justify-between ledger-rule py-3 text-sm">
+              <span className="font-medium">Default view</span>
+              <select
+                className="h-9 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-2 text-sm"
+                value={settings.defaultView ?? "today"}
+                onChange={(e) =>
+                  updateSettings({
+                    defaultView: e.target.value as "today" | "tasks" | "calendar",
+                  })
+                }
+              >
+                <option value="today">Today</option>
+                <option value="tasks">Tasks</option>
+                <option value="calendar">Calendar</option>
+              </select>
+            </div>
           </CardContent>
         </Card>
 

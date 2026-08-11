@@ -10,6 +10,9 @@ function StoreHydration({ children }: { children: React.ReactNode }) {
   const hydrated = useLifeOSStore((s) => s.hydrated);
   const setHydrated = useLifeOSStore((s) => s.setHydrated);
   const accent = useLifeOSStore((s) => s.settings.accent);
+  const daylightMode = useLifeOSStore((s) => s.settings.daylightMode);
+  const reducedMotion = useLifeOSStore((s) => s.settings.reducedMotion);
+  const highContrast = useLifeOSStore((s) => s.settings.highContrast);
 
   useEffect(() => {
     if (useLifeOSStore.persist.hasHydrated()) {
@@ -27,6 +30,12 @@ function StoreHydration({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     document.documentElement.setAttribute("data-accent", accent);
   }, [accent]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("daylight", !!daylightMode);
+    document.documentElement.classList.toggle("reduce-motion", !!reducedMotion);
+    document.documentElement.classList.toggle("high-contrast", !!highContrast);
+  }, [daylightMode, reducedMotion, highContrast]);
 
   if (!hydrated) {
     return (

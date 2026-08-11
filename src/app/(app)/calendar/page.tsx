@@ -79,6 +79,8 @@ export default function CalendarPage() {
   const meetings = useLifeOSStore((s) => s.meetings);
   const tasks = useLifeOSStore((s) => s.tasks);
   const addEvent = useLifeOSStore((s) => s.addEvent);
+  const weekStartsOn = useLifeOSStore((s) => s.settings.weekStartsOn ?? 1);
+  const weekOpts = { weekStartsOn } as const;
 
   const [view, setView] = useState("month");
   const [cursor, setCursor] = useState(() => startOfDay(new Date()));
@@ -153,14 +155,18 @@ export default function CalendarPage() {
   }
 
   const monthDays = useMemo(() => {
-    const start = startOfWeek(startOfMonth(cursor));
-    const end = endOfWeek(endOfMonth(cursor));
+    const start = startOfWeek(startOfMonth(cursor), weekOpts);
+    const end = endOfWeek(endOfMonth(cursor), weekOpts);
     return eachDayOfInterval({ start, end });
-  }, [cursor]);
+  }, [cursor, weekStartsOn]);
 
   const weekDays = useMemo(
-    () => eachDayOfInterval({ start: startOfWeek(cursor), end: endOfWeek(cursor) }),
-    [cursor]
+    () =>
+      eachDayOfInterval({
+        start: startOfWeek(cursor, weekOpts),
+        end: endOfWeek(cursor, weekOpts),
+      }),
+    [cursor, weekStartsOn]
   );
 
   const agendaDays = eachDayOfInterval({
@@ -234,8 +240,13 @@ export default function CalendarPage() {
     view === "month"
       ? format(cursor, "MMMM yyyy")
       : view === "week"
-        ? `${format(startOfWeek(cursor), "MMM d")} – ${format(endOfWeek(cursor), "MMM d, yyyy")}`
+        ? `${format(startOfWeek(cursor, weekOpts), "MMM d")} – ${format(endOfWeek(cursor, weekOpts), "MMM d, yyyy")}`
         : format(cursor, "EEEE, MMM d, yyyy");
+
+  const weekdayLabels =
+    weekStartsOn === 1
+      ? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+      : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -398,7 +409,7 @@ export default function CalendarPage() {
 
             <TabsContent value="month" className="mt-0">
               <div className="grid grid-cols-7 gap-px overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--border)]">
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+                {weekdayLabels.map((d) => (
                   <div
                     key={d}
                     className="bg-[var(--surface-2)] px-1 py-2 text-center text-[11px] font-medium uppercase tracking-wide text-[var(--fg-muted)] sm:text-xs"

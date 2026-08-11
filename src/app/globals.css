@@ -160,7 +160,3 @@ html, body {
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
 }
-
-html:not(.serif-display) .font-display {
-  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-}

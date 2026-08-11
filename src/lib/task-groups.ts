@@ -38,10 +38,13 @@ export const TASK_GROUP_META: Record<
   },
 };
 
-export function groupTasks(tasks: Task[]): Record<TaskGroupKey, Task[]> {
+export function groupTasks(
+  tasks: Task[],
+  weekStartsOn: 0 | 1 = 1
+): Record<TaskGroupKey, Task[]> {
   const today = startOfDay(new Date());
-  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
+  const weekStart = startOfWeek(today, { weekStartsOn });
+  const weekEnd = endOfWeek(today, { weekStartsOn });
   const todayStr = formatISO(today, { representation: "date" });
 
   const groups: Record<TaskGroupKey, Task[]> = {

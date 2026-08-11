@@ -5,6 +5,7 @@ import { format, parseISO } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Archive,
+  CalendarDays,
   Download,
   FileUp,
   Folder,
@@ -24,7 +25,7 @@ import { useLifeOSStore } from "@/stores/use-lifeos-store";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input, Textarea } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { EmptyState, PageHeader } from "@/components/ui/page";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -35,6 +36,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { CategoriesManager } from "@/components/categories/categories-manager";
+import { NoteEditor } from "@/components/notes/note-editor";
 import { cn } from "@/lib/utils";
 import type { Note } from "@/types";
 
@@ -55,6 +57,7 @@ export default function NotesPage() {
   const addNote = useLifeOSStore((s) => s.addNote);
   const updateNote = useLifeOSStore((s) => s.updateNote);
   const deleteNote = useLifeOSStore((s) => s.deleteNote);
+  const addTask = useLifeOSStore((s) => s.addTask);
 
   const [folderId, setFolderId] = useState<string | "all" | "pinned" | "favorites" | "archived">(
     "all"
@@ -63,7 +66,6 @@ export default function NotesPage() {
   const [catOpen, setCatOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [tagDraft, setTagDraft] = useState("");
   const [editorTab, setEditorTab] = useState("write");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -98,28 +100,36 @@ export default function NotesPage() {
   const words = selected ? wordCount(selected.content) : 0;
 
   const backlinkNotes = useMemo(() => {
-    if (!selected) return [];
-    const fromField = selected.backlinks
+    if (!selectedIdResolved) return [];
+    const current = notes.find((n) => n.id === selectedIdResolved);
+    if (!current) return [];
+    const fromField = current.backlinks
       .map((id) => notes.find((n) => n.id === id))
       .filter(Boolean) as Note[];
     const fromMentions = notes.filter(
       (n) =>
-        n.id !== selected.id &&
-        (n.content.includes(`[[${selected.title}]]`) ||
-          selected.content.includes(`[[${n.title}]]`))
+        n.id !== current.id &&
+        (n.content.includes(`[[${current.title}]]`) ||
+          current.content.includes(`[[${n.title}]]`))
     );
     const map = new Map<string, Note>();
     for (const n of [...fromField, ...fromMentions]) map.set(n.id, n);
     return Array.from(map.values());
-  }, [selected, notes]);
+  }, [selectedIdResolved, notes]);
 
   function createNote() {
     const note = addNote({
-      title: "Untitled",
+      title: "Untitled note",
       content: "",
-      folderId: folderId !== "all" && folderId !== "pinned" && folderId !== "favorites" && folderId !== "archived"
-        ? folderId
-        : "fld_inbox",
+      date: format(new Date(), "yyyy-MM-dd"),
+      folderId:
+        folderId !== "all" &&
+        folderId !== "pinned" &&
+        folderId !== "favorites" &&
+        folderId !== "archived"
+          ? folderId
+          : "fld_inbox",
+      categoryId: categoryFilter !== "all" ? categoryFilter : undefined,
       tags: [],
       backlinks: [],
     });
@@ -164,17 +174,6 @@ export default function NotesPage() {
       toast.success(`Imported “${title}”`);
     };
     reader.readAsText(file);
-  }
-
-  function addTag(note: Note) {
-    const t = tagDraft.trim().toLowerCase();
-    if (!t) return;
-    if (note.tags.includes(t)) {
-      toast.message("Tag already exists");
-      return;
-    }
-    updateNote(note.id, { tags: [...note.tags, t] });
-    setTagDraft("");
   }
 
   const folderCounts = useMemo(() => {
@@ -397,8 +396,28 @@ export default function NotesPage() {
               exit={{ opacity: 0 }}
             >
               <Card className="min-h-[520px]">
-                <CardContent className="flex h-full flex-col gap-4 p-4 sm:p-5">
+                <CardContent className="flex h-full flex-col gap-4 p-4 sm:p-6">
+                  <Input
+                    value={selected.title}
+                    onChange={(e) => updateNote(selected.id, { title: e.target.value })}
+                    className="border-0 bg-transparent px-0 font-display text-3xl font-semibold shadow-none focus-visible:ring-0"
+                    placeholder="Untitled note"
+                  />
+
                   <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-rose-500 hover:text-rose-600"
+                      aria-label="Delete note"
+                      onClick={() => {
+                        deleteNote(selected.id);
+                        setSelectedId(null);
+                        toast.success("Note deleted");
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                     <Button
                       size="sm"
                       variant={selected.pinned ? "default" : "ghost"}
@@ -408,60 +427,23 @@ export default function NotesPage() {
                       }}
                     >
                       <Pin className="h-3.5 w-3.5" />
-                      Pin
                     </Button>
                     <Button
                       size="sm"
                       variant={selected.favorite ? "default" : "ghost"}
                       onClick={() => {
                         updateNote(selected.id, { favorite: !selected.favorite });
-                        toast.message(selected.favorite ? "Removed favorite" : "Favorited");
                       }}
                     >
                       <Star className="h-3.5 w-3.5" />
-                      Favorite
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        updateNote(selected.id, { archived: !selected.archived });
-                        toast.message(selected.archived ? "Restored" : "Archived");
-                      }}
-                    >
-                      <Archive className="h-3.5 w-3.5" />
-                      {selected.archived ? "Restore" : "Archive"}
                     </Button>
                     <Button size="sm" variant="ghost" onClick={() => exportNote(selected)}>
                       <Download className="h-3.5 w-3.5" />
-                      Export
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-rose-500 hover:text-rose-600"
-                      onClick={() => {
-                        deleteNote(selected.id);
-                        setSelectedId(null);
-                        toast.success("Note deleted");
-                      }}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      Delete
-                    </Button>
-                    <div className="ml-auto flex items-center gap-3 text-xs text-[var(--fg-muted)]">
-                      <span>{words} words</span>
-                      <span>·</span>
-                      <span>{readingTimeMin(words)} min read</span>
-                    </div>
+                    <span className="ml-auto text-xs text-[var(--fg-muted)]">
+                      {words} words · {readingTimeMin(words)} min
+                    </span>
                   </div>
-
-                  <Input
-                    value={selected.title}
-                    onChange={(e) => updateNote(selected.id, { title: e.target.value })}
-                    className="border-0 bg-transparent px-0 font-display text-2xl font-semibold shadow-none focus-visible:ring-0"
-                    placeholder="Note title"
-                  />
 
                   {(selected.meetingId || (selected.taskIds && selected.taskIds.length > 0)) && (
                     <div className="flex flex-wrap gap-2">
@@ -478,25 +460,21 @@ export default function NotesPage() {
                     </div>
                   )}
 
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    <label className="relative flex h-10 min-w-[140px] flex-1 items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm">
+                      <Input
+                        type="date"
+                        value={
+                          selected.date ??
+                          format(parseISO(selected.createdAt), "yyyy-MM-dd")
+                        }
+                        onChange={(e) => updateNote(selected.id, { date: e.target.value })}
+                        className="h-8 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+                      />
+                      <CalendarDays className="pointer-events-none absolute right-3 h-4 w-4 text-[var(--fg-muted)]" />
+                    </label>
                     <select
-                      className="h-8 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-xs"
-                      value={selected.folderId ?? ""}
-                      onChange={(e) =>
-                        updateNote(selected.id, {
-                          folderId: e.target.value || undefined,
-                        })
-                      }
-                    >
-                      <option value="">No folder</option>
-                      {folders.map((f) => (
-                        <option key={f.id} value={f.id}>
-                          {f.parentId ? `↳ ${f.name}` : f.name}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      className="h-8 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-xs"
+                      className="h-10 min-w-[140px] flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
                       value={selected.categoryId ?? ""}
                       onChange={(e) =>
                         updateNote(selected.id, {
@@ -511,76 +489,58 @@ export default function NotesPage() {
                         </option>
                       ))}
                     </select>
-                    {selected.tags.map((t) => (
-                      <Badge
-                        key={t}
-                        variant="secondary"
-                        className="cursor-pointer gap-1"
-                        onClick={() =>
-                          updateNote(selected.id, {
-                            tags: selected.tags.filter((x) => x !== t),
-                          })
-                        }
-                        title="Click to remove"
-                      >
-                        #{t}
-                      </Badge>
-                    ))}
-                    <form
-                      className="flex gap-1"
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        addTag(selected);
-                      }}
-                    >
-                      <Input
-                        value={tagDraft}
-                        onChange={(e) => setTagDraft(e.target.value)}
-                        placeholder="Add tag"
-                        className="h-8 w-28 text-xs"
-                      />
-                      <Button type="submit" size="sm" variant="ghost">
-                        +
-                      </Button>
-                    </form>
                   </div>
+
+                  <Input
+                    value={selected.tags.join(", ")}
+                    onChange={(e) => {
+                      const tags = e.target.value
+                        .split(",")
+                        .map((t) => t.trim())
+                        .filter(Boolean);
+                      updateNote(selected.id, { tags });
+                    }}
+                    placeholder="Tags (comma-separated)"
+                  />
 
                   <Tabs value={editorTab} onValueChange={setEditorTab} className="flex flex-1 flex-col">
                     <TabsList>
                       <TabsTrigger value="write">Write</TabsTrigger>
                       <TabsTrigger value="preview">Preview</TabsTrigger>
-                      <TabsTrigger value="split" className="hidden sm:inline-flex">
-                        Split
-                      </TabsTrigger>
                     </TabsList>
                     <TabsContent value="write" className="mt-3 flex-1">
-                      <Textarea
-                        value={selected.content}
-                        onChange={(e) => updateNote(selected.id, { content: e.target.value })}
-                        placeholder="Write markdown…"
-                        className="min-h-[320px] resize-y font-mono text-[13px] leading-relaxed"
+                      <NoteEditor
+                        content={selected.content}
+                        onChange={(content) => updateNote(selected.id, { content })}
+                        onConvertChecked={(lines) => {
+                          const created = lines.map((title) =>
+                            addTask({
+                              title,
+                              tags: ["from-note"],
+                              noteId: selected.id,
+                              categoryId: selected.categoryId,
+                              description: `From note: ${selected.title}`,
+                            })
+                          );
+                          updateNote(selected.id, {
+                            taskIds: [
+                              ...(selected.taskIds ?? []),
+                              ...created.map((t) => t.id),
+                            ],
+                          });
+                          toast.success(
+                            `Created ${created.length} task${created.length === 1 ? "" : "s"}`
+                          );
+                        }}
                       />
                     </TabsContent>
                     <TabsContent value="preview" className="mt-3 flex-1">
-                      <div className="prose-lifeos glass min-h-[320px] rounded-xl p-4">
+                      <div className="prose-lifeos min-h-[280px] rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
                         {selected.content.trim() ? (
                           <Markdown body={selected.content} />
                         ) : (
                           <p className="text-sm text-[var(--fg-muted)]">Nothing to preview.</p>
                         )}
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="split" className="mt-3 flex-1">
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <Textarea
-                          value={selected.content}
-                          onChange={(e) => updateNote(selected.id, { content: e.target.value })}
-                          placeholder="Write markdown…"
-                          className="min-h-[320px] resize-y font-mono text-[13px] leading-relaxed"
-                        />
-                        <div className="prose-lifeos glass min-h-[320px] rounded-xl p-4">
-                          <Markdown body={selected.content} />
-                        </div>
                       </div>
                     </TabsContent>
                   </Tabs>
@@ -605,12 +565,6 @@ export default function NotesPage() {
                       </div>
                     </div>
                   )}
-
-                  <p className="text-[11px] text-[var(--fg-muted)]">
-                    Updated {format(parseISO(selected.updatedAt), "MMM d, yyyy · h:mm a")}
-                    {" · "}
-                    Created {format(parseISO(selected.createdAt), "MMM d, yyyy")}
-                  </p>
                 </CardContent>
               </Card>
             </motion.div>
