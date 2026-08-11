@@ -6,9 +6,17 @@ import { Button } from "@/components/ui/button";
 import { useLifeOSStore } from "@/stores/use-lifeos-store";
 
 export function TopBar({ onOpenCommand }: { onOpenCommand: () => void }) {
-  const { setTheme, resolvedTheme } = useTheme();
+  const { setTheme } = useTheme();
   const name = useLifeOSStore((s) => s.settings.name);
   const streak = useLifeOSStore((s) => s.dailyStreak);
+  const daylightMode = useLifeOSStore((s) => s.settings.daylightMode);
+  const updateSettings = useLifeOSStore((s) => s.updateSettings);
+
+  const toggleDaylight = () => {
+    const next = !daylightMode;
+    updateSettings({ daylightMode: next, theme: next ? "light" : "dark" });
+    setTheme(next ? "light" : "dark");
+  };
 
   return (
     <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-[var(--border)] bg-[var(--glass)] px-4 backdrop-blur-xl sm:px-6">
@@ -34,11 +42,10 @@ export function TopBar({ onOpenCommand }: { onOpenCommand: () => void }) {
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Toggle theme"
-          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+          aria-label={daylightMode ? "Switch to ink navy" : "Switch to daylight"}
+          onClick={toggleDaylight}
         >
-          <Sun className="h-4 w-4 dark:hidden" />
-          <Moon className="hidden h-4 w-4 dark:block" />
+          {daylightMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
         </Button>
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--accent)] text-xs font-semibold text-white">
           {name.slice(0, 1)}

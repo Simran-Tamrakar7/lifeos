@@ -28,7 +28,7 @@ export function createSeedData(): LifeOSData {
     settings: {
       name: "Simran",
       email: "simran@lifeos.app",
-      theme: "system",
+      theme: "dark",
       accent: "brass",
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
       focusMinutes: 25,

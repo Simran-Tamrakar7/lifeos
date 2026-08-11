@@ -73,43 +73,92 @@ export default function SettingsPage() {
   const xpInLevel = xp % 200;
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-lg space-y-8">
       <PageHeader
         title="Settings"
-        description="Ledger appearance, profile, data, and shortcuts."
+        description="Local preferences. Everything stays on this device."
       />
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      {/* Ledger-style Appearance + Calendar */}
+      <section className="space-y-4">
+        <h2 className="font-display text-lg font-semibold tracking-tight">Appearance</h2>
+        <div className="flex items-center justify-between ledger-rule py-3">
+          <div>
+            <p className="text-sm font-medium">Daylight mode</p>
+            <p className="text-xs text-[var(--fg-muted)]">
+              Warm paper cream instead of ink navy
+            </p>
+          </div>
+          <Switch checked={!!settings.daylightMode} onCheckedChange={setDaylight} />
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="font-display text-lg font-semibold tracking-tight">Calendar</h2>
+        <div className="flex items-center justify-between ledger-rule py-3">
+          <span className="text-sm font-medium">Week starts on</span>
+          <select
+            className="h-9 rounded-md border border-[var(--border)] bg-[var(--bg)] px-2 text-sm"
+            value={settings.weekStartsOn ?? 1}
+            onChange={(e) =>
+              updateSettings({
+                weekStartsOn: Number(e.target.value) as 0 | 1,
+              })
+            }
+          >
+            <option value={0}>Sunday</option>
+            <option value={1}>Monday</option>
+          </select>
+        </div>
+        <div className="flex items-center justify-between ledger-rule py-3">
+          <span className="text-sm font-medium">Default view</span>
+          <select
+            className="h-9 rounded-md border border-[var(--border)] bg-[var(--bg)] px-2 text-sm"
+            value={settings.defaultView ?? "today"}
+            onChange={(e) =>
+              updateSettings({
+                defaultView: e.target.value as "today" | "tasks" | "calendar",
+              })
+            }
+          >
+            <option value="today">Today</option>
+            <option value="tasks">Tasks</option>
+            <option value="calendar">Calendar</option>
+          </select>
+        </div>
+      </section>
+
+      <div className="grid gap-4">
         <Card className="glass">
           <CardHeader>
             <CardTitle className="font-display">Profile</CardTitle>
             <CardDescription>Local identity — Supabase auth later.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Input value={settings.name} onChange={(e) => updateSettings({ name: e.target.value })} placeholder="Name" />
-            <Input value={settings.email} onChange={(e) => updateSettings({ email: e.target.value })} placeholder="Email" />
+            <Input
+              value={settings.name}
+              onChange={(e) => updateSettings({ name: e.target.value })}
+              placeholder="Name"
+            />
+            <Input
+              value={settings.email}
+              onChange={(e) => updateSettings({ email: e.target.value })}
+              placeholder="Email"
+            />
             <p className="text-xs text-[var(--fg-muted)]">Timezone: {settings.timezone}</p>
           </CardContent>
         </Card>
 
         <Card className="glass">
           <CardHeader>
-            <CardTitle className="font-display">Appearance</CardTitle>
-            <CardDescription>Ledger Fraunces · Public Sans · ink navy / daylight.</CardDescription>
+            <CardTitle className="font-display">More appearance</CardTitle>
+            <CardDescription>Accents and density.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            <label className="flex items-center justify-between gap-3 ledger-rule py-3 text-sm">
-              <div>
-                <p className="font-medium">Daylight mode</p>
-                <p className="text-xs text-[var(--fg-muted)]">
-                  Warm paper cream instead of ink navy
-                </p>
-              </div>
-              <Switch checked={!!settings.daylightMode} onCheckedChange={setDaylight} />
-            </label>
-
             <div>
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]">Accent</p>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]">
+                Accent
+              </p>
               <div className="flex flex-wrap gap-2">
                 {ACCENTS.map((a) => (
                   <button
@@ -125,99 +174,104 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]">Ink palette</p>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]">
+                Ink palette
+              </p>
               <div className="flex flex-wrap gap-2">
                 {INK_PALETTE.map((ink) => (
                   <div key={ink.hex} className="flex flex-col items-center gap-1">
-                    <span className="h-6 w-6 rounded-full" style={{ background: ink.hex }} title={ink.name} />
-                    <span className="text-[9px] text-[var(--fg-muted)]">{ink.name.split(" ")[0]}</span>
+                    <span
+                      className="h-6 w-6 rounded-full"
+                      style={{ background: ink.hex }}
+                      title={ink.name}
+                    />
+                    <span className="text-[9px] text-[var(--fg-muted)]">
+                      {ink.name.split(" ")[0]}
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <label className="flex items-center justify-between text-sm">
-              Compact mode
-              <Switch checked={settings.compactMode} onCheckedChange={(v) => updateSettings({ compactMode: v })} />
-            </label>
-            <label className="flex items-center justify-between text-sm">
-              Reduced motion
-              <Switch checked={!!settings.reducedMotion} onCheckedChange={(v) => updateSettings({ reducedMotion: v })} />
-            </label>
-            <label className="flex items-center justify-between text-sm">
-              High contrast
-              <Switch checked={!!settings.highContrast} onCheckedChange={(v) => updateSettings({ highContrast: v })} />
-            </label>
+            <div className="flex items-center justify-between text-sm">
+              <span>Compact mode</span>
+              <Switch
+                checked={settings.compactMode}
+                onCheckedChange={(v) => updateSettings({ compactMode: v })}
+              />
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span>Reduced motion</span>
+              <Switch
+                checked={!!settings.reducedMotion}
+                onCheckedChange={(v) => updateSettings({ reducedMotion: v })}
+              />
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span>High contrast</span>
+              <Switch
+                checked={!!settings.highContrast}
+                onCheckedChange={(v) => updateSettings({ highContrast: v })}
+              />
+            </div>
           </CardContent>
         </Card>
 
         <Card className="glass">
           <CardHeader>
-            <CardTitle className="font-display">Calendar</CardTitle>
-            <CardDescription>Week start and preferred home view.</CardDescription>
+            <CardTitle className="font-display">Focus defaults</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-1">
-            <div className="flex items-center justify-between ledger-rule py-3 text-sm">
-              <span className="font-medium">Week starts on</span>
-              <select
-                className="h-9 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-2 text-sm"
-                value={settings.weekStartsOn ?? 1}
-                onChange={(e) =>
-                  updateSettings({
-                    weekStartsOn: Number(e.target.value) as 0 | 1,
-                  })
-                }
-              >
-                <option value={0}>Sunday</option>
-                <option value={1}>Monday</option>
-              </select>
-            </div>
-            <div className="flex items-center justify-between ledger-rule py-3 text-sm">
-              <span className="font-medium">Default view</span>
-              <select
-                className="h-9 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-2 text-sm"
-                value={settings.defaultView ?? "today"}
-                onChange={(e) =>
-                  updateSettings({
-                    defaultView: e.target.value as "today" | "tasks" | "calendar",
-                  })
-                }
-              >
-                <option value="today">Today</option>
-                <option value="tasks">Tasks</option>
-                <option value="calendar">Calendar</option>
-              </select>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass">
-          <CardHeader><CardTitle className="font-display">Focus defaults</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            <label className="flex items-center justify-between text-sm">
-              Focus minutes
-              <Input className="w-24" type="number" value={settings.focusMinutes} onChange={(e) => updateSettings({ focusMinutes: Number(e.target.value) || 25 })} />
-            </label>
-            <label className="flex items-center justify-between text-sm">
-              Break minutes
-              <Input className="w-24" type="number" value={settings.breakMinutes} onChange={(e) => updateSettings({ breakMinutes: Number(e.target.value) || 5 })} />
-            </label>
-            <label className="flex items-center justify-between text-sm">
-              Daily task goal
-              <Input className="w-24" type="number" value={settings.dailyGoalTasks} onChange={(e) => updateSettings({ dailyGoalTasks: Number(e.target.value) || 5 })} />
-            </label>
-            <label className="flex items-center justify-between text-sm">
-              Notifications
-              <Switch checked={settings.notifications} onCheckedChange={(v) => updateSettings({ notifications: v })} />
-            </label>
+            <div className="flex items-center justify-between text-sm">
+              <span>Focus minutes</span>
+              <Input
+                className="w-24"
+                type="number"
+                value={settings.focusMinutes}
+                onChange={(e) =>
+                  updateSettings({ focusMinutes: Number(e.target.value) || 25 })
+                }
+              />
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span>Break minutes</span>
+              <Input
+                className="w-24"
+                type="number"
+                value={settings.breakMinutes}
+                onChange={(e) =>
+                  updateSettings({ breakMinutes: Number(e.target.value) || 5 })
+                }
+              />
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span>Daily task goal</span>
+              <Input
+                className="w-24"
+                type="number"
+                value={settings.dailyGoalTasks}
+                onChange={(e) =>
+                  updateSettings({ dailyGoalTasks: Number(e.target.value) || 5 })
+                }
+              />
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span>Notifications</span>
+              <Switch
+                checked={settings.notifications}
+                onCheckedChange={(v) => updateSettings({ notifications: v })}
+              />
+            </div>
           </CardContent>
         </Card>
 
         <Card className="glass">
-          <CardHeader><CardTitle className="font-display">Data</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="font-display">Data</CardTitle>
+          </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             <Button onClick={download}>Export JSON</Button>
-            <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 h-10 text-sm font-medium hover:bg-[var(--surface-3)]">
+            <label className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 text-sm font-medium hover:bg-[var(--surface-3)]">
               Import JSON
               <input
                 type="file"
@@ -244,9 +298,15 @@ export default function SettingsPage() {
         </Card>
 
         <Card className="glass">
-          <CardHeader><CardTitle className="font-display">Shortcuts</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="font-display">Shortcuts</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-2 text-sm text-[var(--fg-muted)]">
-            <p><kbd className="rounded border border-[var(--border)] px-1.5">⌘/Ctrl</kbd> + <kbd className="rounded border border-[var(--border)] px-1.5">K</kbd> Command palette / capture</p>
+            <p>
+              <kbd className="rounded border border-[var(--border)] px-1.5">⌘/Ctrl</kbd> +{" "}
+              <kbd className="rounded border border-[var(--border)] px-1.5">K</kbd> Command
+              palette / capture
+            </p>
             <p>Konami code unlocks a secret achievement</p>
           </CardContent>
         </Card>
@@ -254,13 +314,19 @@ export default function SettingsPage() {
         <Card className="glass">
           <CardHeader>
             <CardTitle className="font-display">XP & Achievements</CardTitle>
-            <CardDescription>Level {level} · {xp} XP</CardDescription>
+            <CardDescription>
+              Level {level} · {xp} XP
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <Progress value={(xpInLevel / 200) * 100} />
             <div className="flex flex-wrap gap-2">
               {achievements.map((a) => (
-                <Badge key={a.id} variant={a.unlockedAt ? "default" : "outline"} title={a.description}>
+                <Badge
+                  key={a.id}
+                  variant={a.unlockedAt ? "default" : "outline"}
+                  title={a.description}
+                >
                   {a.icon} {a.title}
                 </Badge>
               ))}

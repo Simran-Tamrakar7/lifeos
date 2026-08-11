@@ -1,6 +1,6 @@
 "use client";
 
-import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { Toaster } from "sonner";
@@ -13,6 +13,7 @@ function StoreHydration({ children }: { children: React.ReactNode }) {
   const daylightMode = useLifeOSStore((s) => s.settings.daylightMode);
   const reducedMotion = useLifeOSStore((s) => s.settings.reducedMotion);
   const highContrast = useLifeOSStore((s) => s.settings.highContrast);
+  const { setTheme } = useTheme();
 
   useEffect(() => {
     if (useLifeOSStore.persist.hasHydrated()) {
@@ -32,10 +33,15 @@ function StoreHydration({ children }: { children: React.ReactNode }) {
   }, [accent]);
 
   useEffect(() => {
-    document.documentElement.classList.toggle("daylight", !!daylightMode);
     document.documentElement.classList.toggle("reduce-motion", !!reducedMotion);
     document.documentElement.classList.toggle("high-contrast", !!highContrast);
-  }, [daylightMode, reducedMotion, highContrast]);
+  }, [reducedMotion, highContrast]);
+
+  // Keep next-themes + store in sync (ink navy vs warm cream)
+  useEffect(() => {
+    if (!hydrated) return;
+    setTheme(daylightMode ? "light" : "dark");
+  }, [hydrated, daylightMode, setTheme]);
 
   if (!hydrated) {
     return (
@@ -55,7 +61,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [client] = useState(() => new QueryClient());
 
   return (
-    <NextThemesProvider attribute="class" defaultTheme="system" enableSystem>
+    <NextThemesProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <QueryClientProvider client={client}>
         <StoreHydration>{children}</StoreHydration>
         <Toaster theme="system" position="bottom-right" richColors closeButton />
