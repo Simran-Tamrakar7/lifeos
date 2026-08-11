@@ -92,6 +92,31 @@ html, body {
     var(--bg);
 }
 
+html[data-wallpaper="none"] .lifeos-bg {
+  background: var(--bg);
+}
+
+html[data-wallpaper="grid"] .lifeos-bg {
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--border) 80%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--border) 80%, transparent) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+html[data-wallpaper="noise"] .lifeos-bg {
+  background: var(--bg);
+}
+
+html[data-wallpaper="noise"] .lifeos-bg::after {
+  opacity: 0.06;
+}
+
+html[data-wallpaper="none"] .lifeos-bg::after,
+html[data-wallpaper="grid"] .lifeos-bg::after {
+  display: none;
+}
+
 .lifeos-bg::after {
   content: "";
   position: absolute;
@@ -106,6 +131,54 @@ html, body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border);
+}
+
+html.no-glass .glass {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--surface);
+}
+
+html[data-radius="sharp"] {
+  --radius: 0.25rem;
+}
+html[data-radius="soft"] {
+  --radius: 0.75rem;
+}
+html[data-radius="round"] {
+  --radius: 1.25rem;
+}
+html[data-radius="sharp"] .rounded-xl,
+html[data-radius="sharp"] .rounded-2xl,
+html[data-radius="sharp"] .rounded-lg {
+  border-radius: var(--radius) !important;
+}
+html[data-radius="round"] .rounded-xl,
+html[data-radius="round"] .rounded-2xl,
+html[data-radius="round"] .rounded-lg {
+  border-radius: var(--radius) !important;
+}
+
+html.compact .p-4 {
+  padding: 0.75rem;
+}
+html.compact .p-5 {
+  padding: 0.85rem;
+}
+html.compact .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1rem;
+}
+
+html[data-motion="subtle"] *,
+html[data-motion="subtle"] *::before,
+html[data-motion="subtle"] *::after {
+  animation-duration: 0.35s !important;
+  transition-duration: 0.2s !important;
+}
+
+html.no-page-motion [data-framer-component],
+html.no-page-motion .motion-safe\:animate-in {
+  animation: none !important;
 }
 
 .ledger-rule {

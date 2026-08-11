@@ -25,6 +25,7 @@ import type {
   TaskStatus,
 } from "@/types";
 import { createSeedData } from "@/data/seed";
+import { createEmptyData } from "@/data/empty";
 import { uid } from "@/lib/utils";
 import { parseNaturalLanguage } from "@/lib/nl-parse";
 
@@ -32,6 +33,7 @@ type LifeOSState = LifeOSData & {
   hydrated: boolean;
   setHydrated: (v: boolean) => void;
   resetData: () => void;
+  clearData: () => void;
   exportData: () => string;
   importData: (json: string) => boolean;
 
@@ -119,16 +121,17 @@ type LifeOSState = LifeOSData & {
   bumpStreak: () => void;
 };
 
-const seed = createSeedData();
+const empty = createEmptyData();
 
 export const useLifeOSStore = create<LifeOSState>()(
   persist(
     (set, get) => ({
-      ...seed,
+      ...empty,
       hydrated: false,
       setHydrated: (v) => set({ hydrated: v }),
 
       resetData: () => set({ ...createSeedData(), hydrated: true }),
+      clearData: () => set({ ...createEmptyData(), hydrated: true }),
 
       exportData: () => {
         const state = get();
@@ -1032,7 +1035,7 @@ export const useLifeOSStore = create<LifeOSState>()(
       },
     }),
     {
-      name: "lifeos:v2",
+      name: "lifeos:v3",
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => {
         const {

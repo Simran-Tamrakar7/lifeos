@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { INK_PALETTE } from "@/lib/ink";
 import { InstallPwaButton } from "@/components/pwa/install-pwa-button";
+import { BODY_FONTS, DISPLAY_FONTS, MONO_FONTS } from "@/lib/fonts";
 
 const ACCENTS: AccentColor[] = [
   "brass",
@@ -44,6 +45,7 @@ export default function SettingsPage() {
   const exportData = useLifeOSStore((s) => s.exportData);
   const importData = useLifeOSStore((s) => s.importData);
   const resetData = useLifeOSStore((s) => s.resetData);
+  const clearData = useLifeOSStore((s) => s.clearData);
   const achievements = useLifeOSStore((s) => s.achievements);
   const xp = useLifeOSStore((s) => s.xp);
   const level = useLifeOSStore((s) => s.level);
@@ -91,6 +93,129 @@ export default function SettingsPage() {
             </p>
           </div>
           <Switch checked={!!settings.daylightMode} onCheckedChange={setDaylight} />
+        </div>
+        <div className="flex items-center justify-between ledger-rule py-3">
+          <span className="text-sm font-medium">Display font</span>
+          <select
+            className="h-9 max-w-[55%] rounded-md border border-[var(--border)] bg-[var(--bg)] px-2 text-sm"
+            value={settings.displayFont ?? "fraunces"}
+            onChange={(e) => updateSettings({ displayFont: e.target.value })}
+            style={{ fontFamily: DISPLAY_FONTS.find((f) => f.id === (settings.displayFont ?? "fraunces"))?.family }}
+          >
+            {DISPLAY_FONTS.map((f) => (
+              <option key={f.id} value={f.id} style={{ fontFamily: f.family }}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-center justify-between ledger-rule py-3">
+          <span className="text-sm font-medium">Body font</span>
+          <select
+            className="h-9 max-w-[55%] rounded-md border border-[var(--border)] bg-[var(--bg)] px-2 text-sm"
+            value={settings.bodyFont ?? "public-sans"}
+            onChange={(e) => updateSettings({ bodyFont: e.target.value })}
+          >
+            {BODY_FONTS.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-center justify-between ledger-rule py-3">
+          <span className="text-sm font-medium">Mono font</span>
+          <select
+            className="h-9 max-w-[55%] rounded-md border border-[var(--border)] bg-[var(--bg)] px-2 text-sm"
+            value={settings.monoFont ?? "ibm-plex-mono"}
+            onChange={(e) => updateSettings({ monoFont: e.target.value })}
+          >
+            {MONO_FONTS.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-center justify-between ledger-rule py-3">
+          <span className="text-sm font-medium">Text size</span>
+          <select
+            className="h-9 rounded-md border border-[var(--border)] bg-[var(--bg)] px-2 text-sm"
+            value={settings.fontScale ?? "md"}
+            onChange={(e) =>
+              updateSettings({ fontScale: e.target.value as "sm" | "md" | "lg" })
+            }
+          >
+            <option value="sm">Small</option>
+            <option value="md">Medium</option>
+            <option value="lg">Large</option>
+          </select>
+        </div>
+        <div className="flex items-center justify-between ledger-rule py-3">
+          <div>
+            <p className="text-sm font-medium">Motion</p>
+            <p className="text-xs text-[var(--fg-muted)]">Page and UI animation intensity</p>
+          </div>
+          <select
+            className="h-9 rounded-md border border-[var(--border)] bg-[var(--bg)] px-2 text-sm"
+            value={settings.motion ?? "full"}
+            onChange={(e) => {
+              const motion = e.target.value as "off" | "subtle" | "full";
+              updateSettings({
+                motion,
+                reducedMotion: motion === "off",
+              });
+            }}
+          >
+            <option value="off">Off</option>
+            <option value="subtle">Subtle</option>
+            <option value="full">Full</option>
+          </select>
+        </div>
+        <div className="flex items-center justify-between ledger-rule py-3">
+          <span className="text-sm font-medium">Page transitions</span>
+          <Switch
+            checked={settings.pageTransitions !== false}
+            onCheckedChange={(v) => updateSettings({ pageTransitions: v })}
+          />
+        </div>
+        <div className="flex items-center justify-between ledger-rule py-3">
+          <span className="text-sm font-medium">Corner radius</span>
+          <select
+            className="h-9 rounded-md border border-[var(--border)] bg-[var(--bg)] px-2 text-sm"
+            value={settings.radius ?? "soft"}
+            onChange={(e) =>
+              updateSettings({ radius: e.target.value as "sharp" | "soft" | "round" })
+            }
+          >
+            <option value="sharp">Sharp</option>
+            <option value="soft">Soft</option>
+            <option value="round">Round</option>
+          </select>
+        </div>
+        <div className="flex items-center justify-between ledger-rule py-3">
+          <span className="text-sm font-medium">Wallpaper</span>
+          <select
+            className="h-9 rounded-md border border-[var(--border)] bg-[var(--bg)] px-2 text-sm"
+            value={settings.wallpaper ?? "blobs"}
+            onChange={(e) =>
+              updateSettings({
+                wallpaper: e.target.value as "none" | "blobs" | "grid" | "noise",
+              })
+            }
+          >
+            <option value="none">Flat</option>
+            <option value="blobs">Ink wash</option>
+            <option value="grid">Grid</option>
+            <option value="noise">Paper grain</option>
+          </select>
+        </div>
+        <div className="flex items-center justify-between ledger-rule py-3">
+          <span className="text-sm font-medium">Glass effects</span>
+          <Switch
+            checked={settings.glassEffects !== false}
+            onCheckedChange={(v) => updateSettings({ glassEffects: v })}
+          />
         </div>
       </section>
 
@@ -152,8 +277,8 @@ export default function SettingsPage() {
 
         <Card className="glass">
           <CardHeader>
-            <CardTitle className="font-display">More appearance</CardTitle>
-            <CardDescription>Accents and density.</CardDescription>
+            <CardTitle className="font-display">Colors & density</CardTitle>
+            <CardDescription>Accents and compact layout.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <div>
@@ -199,13 +324,6 @@ export default function SettingsPage() {
               <Switch
                 checked={settings.compactMode}
                 onCheckedChange={(v) => updateSettings({ compactMode: v })}
-              />
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span>Reduced motion</span>
-              <Switch
-                checked={!!settings.reducedMotion}
-                onCheckedChange={(v) => updateSettings({ reducedMotion: v })}
               />
             </div>
             <div className="flex items-center justify-between text-sm">
@@ -281,6 +399,7 @@ export default function SettingsPage() {
         <Card className="glass">
           <CardHeader>
             <CardTitle className="font-display">Data</CardTitle>
+            <CardDescription>Export, wipe, or reload demo content.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             <Button onClick={download}>Export JSON</Button>
@@ -299,13 +418,28 @@ export default function SettingsPage() {
             <Button
               variant="destructive"
               onClick={() => {
-                if (confirm("Reset all LifeOS data to demo seed?")) {
-                  resetData();
-                  toast.message("Reset to seed data");
+                if (
+                  confirm(
+                    "Clear all tasks, notes, meetings, and other data? This cannot be undone."
+                  )
+                ) {
+                  clearData();
+                  toast.message("All data cleared");
                 }
               }}
             >
-              Reset
+              Clear all data
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                if (confirm("Replace everything with demo seed data?")) {
+                  resetData();
+                  toast.message("Loaded demo seed");
+                }
+              }}
+            >
+              Load demo
             </Button>
           </CardContent>
         </Card>

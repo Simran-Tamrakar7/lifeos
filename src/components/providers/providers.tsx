@@ -5,14 +5,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { Toaster } from "sonner";
 import { useLifeOSStore } from "@/stores/use-lifeos-store";
+import { AppearanceEffects } from "@/components/providers/appearance-effects";
 
 function StoreHydration({ children }: { children: React.ReactNode }) {
   const hydrated = useLifeOSStore((s) => s.hydrated);
   const setHydrated = useLifeOSStore((s) => s.setHydrated);
   const accent = useLifeOSStore((s) => s.settings.accent);
   const daylightMode = useLifeOSStore((s) => s.settings.daylightMode);
-  const reducedMotion = useLifeOSStore((s) => s.settings.reducedMotion);
-  const highContrast = useLifeOSStore((s) => s.settings.highContrast);
   const { setTheme } = useTheme();
 
   useEffect(() => {
@@ -32,11 +31,6 @@ function StoreHydration({ children }: { children: React.ReactNode }) {
     document.documentElement.setAttribute("data-accent", accent);
   }, [accent]);
 
-  useEffect(() => {
-    document.documentElement.classList.toggle("reduce-motion", !!reducedMotion);
-    document.documentElement.classList.toggle("high-contrast", !!highContrast);
-  }, [reducedMotion, highContrast]);
-
   // Keep next-themes + store in sync (ink navy vs warm cream)
   useEffect(() => {
     if (!hydrated) return;
@@ -54,7 +48,12 @@ function StoreHydration({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <AppearanceEffects />
+      {children}
+    </>
+  );
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {

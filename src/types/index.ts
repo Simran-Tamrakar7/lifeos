@@ -320,7 +320,6 @@ export interface UserSettings {
   focusMinutes: number;
   breakMinutes: number;
   dailyGoalTasks: number;
-  wallpaper?: string;
   notifications: boolean;
   compactMode: boolean;
   /** Warm paper cream instead of ink navy */
@@ -331,6 +330,20 @@ export interface UserSettings {
   defaultView?: "today" | "tasks" | "calendar";
   reducedMotion?: boolean;
   highContrast?: boolean;
+  /** Heading / display typeface id */
+  displayFont?: string;
+  /** UI body typeface id */
+  bodyFont?: string;
+  /** Mono / labels typeface id */
+  monoFont?: string;
+  /** Root text scale */
+  fontScale?: "sm" | "md" | "lg";
+  /** Motion intensity */
+  motion?: "off" | "subtle" | "full";
+  pageTransitions?: boolean;
+  radius?: "sharp" | "soft" | "round";
+  wallpaper?: "none" | "blobs" | "grid" | "noise";
+  glassEffects?: boolean;
 }
 
 export interface FocusSession {
