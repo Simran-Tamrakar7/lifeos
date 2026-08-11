@@ -80,8 +80,8 @@ export function NoteEditor({
   };
 
   return (
-    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-      <div className="flex flex-wrap items-center gap-1 border-b border-[var(--border)] bg-[var(--surface-2)] px-2 py-1.5">
+    <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+      <div className="flex flex-wrap items-center gap-1 border-b border-[var(--border)] px-2 py-1.5">
         <ToolbarBtn label="Bold" onClick={() => wrap("**")}>
           <Bold className="h-3.5 w-3.5" />
         </ToolbarBtn>
@@ -112,7 +112,7 @@ export function NoteEditor({
         value={content}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Write the meeting down. Checkboxes become tasks later."
-        className="min-h-[280px] resize-y rounded-none border-0 bg-transparent px-4 py-3 text-sm leading-relaxed shadow-none focus-visible:ring-0"
+        className="min-h-[280px] resize-y rounded-none border-0 bg-transparent px-4 py-3 text-sm leading-relaxed text-[var(--fg)] shadow-none placeholder:text-[var(--fg-muted)] focus-visible:ring-0"
       />
     </div>
   );

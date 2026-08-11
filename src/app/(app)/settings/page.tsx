@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { INK_PALETTE } from "@/lib/ink";
+import { InstallPwaButton } from "@/components/pwa/install-pwa-button";
 
 const ACCENTS: AccentColor[] = [
   "brass",
@@ -262,6 +263,18 @@ export default function SettingsPage() {
                 onCheckedChange={(v) => updateSettings({ notifications: v })}
               />
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="glass">
+          <CardHeader>
+            <CardTitle className="font-display">Install app</CardTitle>
+            <CardDescription>
+              Add LifeOS to your home screen. New deploys prompt a refresh.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <InstallPwaButton />
           </CardContent>
         </Card>
 
