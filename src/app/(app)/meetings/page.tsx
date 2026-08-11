@@ -199,7 +199,11 @@ export default function MeetingsPage() {
       notes: form.notes.trim() || undefined,
       template: form.template || undefined,
     });
-    toast.success("Meeting scheduled");
+    toast.success(
+      form.notes.trim()
+        ? "Meeting scheduled · calendar + notes synced"
+        : "Meeting scheduled · added to Calendar"
+    );
     setOpen(false);
     setForm({
       title: "",
@@ -577,14 +581,29 @@ function MeetingDetail({
         </section>
 
         <section>
-          <h3 className="mb-2 text-sm font-semibold">Notes</h3>
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Meeting minutes</h3>
+            {meeting.linkedNoteId && (
+              <a
+                href="/notes"
+                className="text-xs font-medium text-[var(--accent)] hover:underline"
+              >
+                Open in Notes →
+              </a>
+            )}
+          </div>
           <Textarea
             value={meeting.notes ?? ""}
             onChange={(e) => onUpdate(meeting.id, { notes: e.target.value })}
-            placeholder="Meeting notes…"
+            placeholder="Write minutes — they sync to Notes automatically…"
             rows={4}
             className="min-h-[100px]"
           />
+          {meeting.linkedNoteId && (
+            <p className="mt-1.5 text-xs text-[var(--fg-muted)]">
+              Synced to Notes as “Minutes · {meeting.title}”
+            </p>
+          )}
         </section>
 
         <section>
@@ -592,6 +611,7 @@ function MeetingDetail({
             <h3 className="text-sm font-semibold">Action items</h3>
             <span className="text-xs text-[var(--fg-muted)]">
               {meeting.actionItems.filter((a) => a.done).length}/{meeting.actionItems.length} done
+              {" · "}synced to Tasks
             </span>
           </div>
           {meeting.actionItems.length === 0 ? (
@@ -612,9 +632,14 @@ function MeetingDetail({
                     <p className={cn("text-sm", a.done && "text-[var(--fg-muted)] line-through")}>
                       {a.text}
                     </p>
-                    {a.assignee && (
-                      <p className="mt-0.5 text-xs text-[var(--fg-muted)]">{a.assignee}</p>
-                    )}
+                    <div className="mt-0.5 flex flex-wrap gap-2 text-xs text-[var(--fg-muted)]">
+                      {a.assignee && <span>{a.assignee}</span>}
+                      {a.taskId && (
+                        <a href="/tasks" className="text-[var(--accent)] hover:underline">
+                          Task linked
+                        </a>
+                      )}
+                    </div>
                   </div>
                   {a.done && <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />}
                 </li>
@@ -627,7 +652,7 @@ function MeetingDetail({
               e.preventDefault();
               onAddAction(meeting, newAction);
               setNewAction("");
-              toast.success("Action item added");
+              toast.success("Action item added · synced to Tasks");
             }}
           >
             <Input

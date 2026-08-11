@@ -60,6 +60,11 @@ export function TaskListView({ tasks }: { tasks: Task[] }) {
                 )}
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[var(--fg-muted)]">
                   {task.dueDate && <span>Due {format(parseISO(task.dueDate), "MMM d, h:mm a")}</span>}
+                  {task.meetingId && (
+                    <a href="/meetings" className="rounded-md bg-[var(--accent-soft)] px-1.5 py-0.5 text-[var(--accent)] hover:underline">
+                      From meeting
+                    </a>
+                  )}
                   {task.tags.map((tag) => (
                     <Badge key={tag} variant="outline">
                       #{tag}

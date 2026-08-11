@@ -13,6 +13,7 @@ import { AddTaskDialog } from "@/components/tasks/add-task-dialog";
 import { TaskListView } from "@/components/tasks/task-list-view";
 import { TaskKanbanView } from "@/components/tasks/task-kanban-view";
 import { TaskTableView } from "@/components/tasks/task-table-view";
+import { TaskAgendaGroups } from "@/components/tasks/task-agenda-groups";
 import type { Priority, TaskStatus } from "@/types";
 
 const STATUS_FILTERS: Array<"all" | TaskStatus> = [
@@ -163,12 +164,24 @@ export default function TasksPage() {
           <span>of {tasks.filter((t) => !t.archived).length} tasks</span>
         </div>
 
-        <Tabs defaultValue="list">
+        <Tabs defaultValue="agenda">
           <TabsList>
+            <TabsTrigger value="agenda">Agenda</TabsTrigger>
             <TabsTrigger value="list">List</TabsTrigger>
             <TabsTrigger value="kanban">Kanban</TabsTrigger>
             <TabsTrigger value="table">Table</TabsTrigger>
           </TabsList>
+          <TabsContent value="agenda">
+            {filtered.length === 0 ? (
+              <EmptyState
+                icon={CheckSquare}
+                title="No tasks match"
+                description="Try clearing filters or capture a new task above."
+              />
+            ) : (
+              <TaskAgendaGroups tasks={filtered} />
+            )}
+          </TabsContent>
           <TabsContent value="list">
             {filtered.length === 0 ? (
               <EmptyState

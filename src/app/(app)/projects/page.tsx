@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { FolderKanban, Plus, Trash2 } from "lucide-react";
+import { FolderKanban, Plus, Trash2, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLifeOSStore } from "@/stores/use-lifeos-store";
 import type { ProjectStatus } from "@/types";
@@ -15,17 +15,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
+import { CategoriesManager } from "@/components/categories/categories-manager";
 
 const STATUSES: ProjectStatus[] = ["planning", "active", "on_hold", "completed", "archived"];
 
 export default function ProjectsPage() {
   const projects = useLifeOSStore((s) => s.projects);
   const tasks = useLifeOSStore((s) => s.tasks);
+  const categories = useLifeOSStore((s) => s.categories);
   const addProject = useLifeOSStore((s) => s.addProject);
   const updateProject = useLifeOSStore((s) => s.updateProject);
   const deleteProject = useLifeOSStore((s) => s.deleteProject);
   const [selected, setSelected] = useState(projects[0]?.id);
   const [open, setOpen] = useState(false);
+  const [catOpen, setCatOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
@@ -68,6 +71,7 @@ export default function ProjectsPage() {
         <EmptyState icon={FolderKanban} title="No projects" description="Create a container for related work." />
       ) : (
         <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+          <div className="space-y-4">
           <Card className="glass h-fit">
             <CardContent className="space-y-1 p-3">
               {projects.map((p) => (
@@ -86,6 +90,48 @@ export default function ProjectsPage() {
               ))}
             </CardContent>
           </Card>
+
+          <Card className="glass">
+            <CardHeader className="flex-row items-center justify-between space-y-0 p-4 pb-2">
+              <CardTitle className="font-display text-base">Categories</CardTitle>
+              <Dialog open={catOpen} onOpenChange={setCatOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="ghost">
+                    <Settings2 className="h-3.5 w-3.5" /> Manage
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="sr-only">Categories</DialogTitle>
+                  </DialogHeader>
+                  <CategoriesManager />
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent className="space-y-1 p-3 pt-0">
+              {[...categories].sort((a, b) => a.order - b.order).map((c) => (
+                <div
+                  key={c.id}
+                  className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-[var(--fg-muted)]"
+                >
+                  <span className="ink-dot" style={{ background: c.color }} />
+                  <span className="flex-1 truncate text-[var(--fg)]">{c.name}</span>
+                  <span className="font-mono text-[10px]">
+                    {tasks.filter((t) => t.categoryId === c.id).length}t
+                  </span>
+                </div>
+              ))}
+              <Button
+                variant="secondary"
+                size="sm"
+                className="mt-2 w-full"
+                onClick={() => setCatOpen(true)}
+              >
+                <Plus className="h-3.5 w-3.5" /> Add category
+              </Button>
+            </CardContent>
+          </Card>
+          </div>
 
           {project && (
             <div className="space-y-4">

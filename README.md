@@ -64,6 +64,8 @@ UI never talks to storage directly — swap `LocalStorageAdapter` for `SupabaseA
 
 ## Deployment
 
+**Production:** [https://lifeos-manage.vercel.app](https://lifeos-manage.vercel.app)
+
 ```bash
 npx vercel
 ```

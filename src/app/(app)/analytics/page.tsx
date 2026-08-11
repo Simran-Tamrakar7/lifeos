@@ -82,7 +82,7 @@ export default function AnalyticsPage() {
           <Card key={label as string} className="glass">
             <CardContent className="p-5">
               <p className="text-sm text-[var(--fg-muted)]">{label}</p>
-              <p className="font-display text-2xl font-semibold">{value}</p>
+              <p className="font-display text-3xl font-semibold tracking-tight">{value}</p>
             </CardContent>
           </Card>
         ))}

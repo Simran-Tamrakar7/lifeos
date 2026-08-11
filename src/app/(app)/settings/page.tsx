@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { useLifeOSStore } from "@/stores/use-lifeos-store";
 import type { AccentColor, ThemeMode } from "@/types";
@@ -11,8 +12,31 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { INK_PALETTE } from "@/lib/ink";
 
-const ACCENTS: AccentColor[] = ["blue", "violet", "emerald", "rose", "amber", "cyan", "orange"];
+const ACCENTS: AccentColor[] = [
+  "brass",
+  "blue",
+  "violet",
+  "emerald",
+  "rose",
+  "amber",
+  "cyan",
+  "orange",
+  "plum",
+];
+
+const ACCENT_HEX: Record<AccentColor, string> = {
+  brass: "#C9A227",
+  blue: "#5C7A99",
+  violet: "#7c3aed",
+  emerald: "#6B8F71",
+  rose: "#B5533C",
+  amber: "#A8842C",
+  cyan: "#4E7A72",
+  orange: "#B5533C",
+  plum: "#7A5C74",
+};
 
 export default function SettingsPage() {
   const settings = useLifeOSStore((s) => s.settings);
@@ -24,6 +48,13 @@ export default function SettingsPage() {
   const xp = useLifeOSStore((s) => s.xp);
   const level = useLifeOSStore((s) => s.level);
   const { setTheme } = useTheme();
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("daylight", !!settings.daylightMode);
+    document.documentElement.classList.toggle("serif-display", settings.serifDisplay !== false);
+    document.documentElement.classList.toggle("reduce-motion", !!settings.reducedMotion);
+    document.documentElement.classList.toggle("high-contrast", !!settings.highContrast);
+  }, [settings.daylightMode, settings.serifDisplay, settings.reducedMotion, settings.highContrast]);
 
   const setThemeMode = (theme: ThemeMode) => {
     updateSettings({ theme });
@@ -51,12 +82,15 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Settings" description="Theme, profile, data, and shortcuts." />
+      <PageHeader
+        title="Settings"
+        description="Ledger appearance, profile, data, and shortcuts."
+      />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="glass">
           <CardHeader>
-            <CardTitle>Profile</CardTitle>
+            <CardTitle className="font-display">Profile</CardTitle>
             <CardDescription>Local identity — Supabase auth later.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -68,45 +102,93 @@ export default function SettingsPage() {
 
         <Card className="glass">
           <CardHeader>
-            <CardTitle>Appearance</CardTitle>
+            <CardTitle className="font-display">Appearance</CardTitle>
+            <CardDescription>Fonts, ink accents, and display density.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              {(["light", "dark", "system"] as ThemeMode[]).map((t) => (
-                <Button key={t} size="sm" variant={settings.theme === t ? "default" : "secondary"} onClick={() => setThemeMode(t)} className="capitalize">
-                  {t}
-                </Button>
-              ))}
+          <CardContent className="space-y-5">
+            <div>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]">Theme</p>
+              <div className="flex flex-wrap gap-2">
+                {(["light", "dark", "system"] as ThemeMode[]).map((t) => (
+                  <Button key={t} size="sm" variant={settings.theme === t ? "default" : "secondary"} onClick={() => setThemeMode(t)} className="capitalize">
+                    {t}
+                  </Button>
+                ))}
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {ACCENTS.map((a) => {
-                const colors: Record<AccentColor, string> = {
-                  blue: "#2563eb",
-                  violet: "#7c3aed",
-                  emerald: "#059669",
-                  rose: "#e11d48",
-                  amber: "#d97706",
-                  cyan: "#0891b2",
-                  orange: "#ea580c",
-                };
-                return (
+
+            <label className="flex items-center justify-between gap-3 text-sm">
+              <div>
+                <p className="font-medium">Daylight mode</p>
+                <p className="text-xs text-[var(--fg-muted)]">Warm paper cream instead of cool light</p>
+              </div>
+              <Switch
+                checked={!!settings.daylightMode}
+                onCheckedChange={(v) => {
+                  updateSettings({ daylightMode: v });
+                  if (v) setThemeMode("light");
+                }}
+              />
+            </label>
+
+            <label className="flex items-center justify-between gap-3 text-sm">
+              <div>
+                <p className="font-medium">Serif display</p>
+                <p className="text-xs text-[var(--fg-muted)]">Fraunces headings (Ledger look)</p>
+              </div>
+              <Switch
+                checked={settings.serifDisplay !== false}
+                onCheckedChange={(v) => updateSettings({ serifDisplay: v })}
+              />
+            </label>
+
+            <div>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]">Accent</p>
+              <div className="flex flex-wrap gap-2">
+                {ACCENTS.map((a) => (
                   <button
                     key={a}
                     type="button"
                     aria-label={a}
                     onClick={() => updateSettings({ accent: a })}
                     className={`h-8 w-8 rounded-full ring-2 ring-offset-2 ring-offset-[var(--bg)] ${settings.accent === a ? "ring-[var(--fg)]" : "ring-transparent"}`}
-                    style={{ background: colors[a] }}
+                    style={{ background: ACCENT_HEX[a] }}
                   />
-                );
-              })}
+                ))}
+              </div>
+              <p className="mt-2 text-xs capitalize text-[var(--fg-muted)]">Accent: {settings.accent}</p>
             </div>
-            <p className="text-xs text-[var(--fg-muted)]">Accent: {settings.accent}</p>
+
+            <div>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]">Ink palette</p>
+              <div className="flex flex-wrap gap-2">
+                {INK_PALETTE.map((ink) => (
+                  <div key={ink.hex} className="flex flex-col items-center gap-1">
+                    <span className="h-6 w-6 rounded-full" style={{ background: ink.hex }} title={ink.name} />
+                    <span className="text-[9px] text-[var(--fg-muted)]">{ink.name.split(" ")[0]}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-[var(--fg-muted)]">Used by categories across notes, tasks, and meetings.</p>
+            </div>
+
+            <label className="flex items-center justify-between text-sm">
+              Compact mode
+              <Switch checked={settings.compactMode} onCheckedChange={(v) => updateSettings({ compactMode: v })} />
+            </label>
+            <label className="flex items-center justify-between text-sm">
+              Reduced motion
+              <Switch checked={!!settings.reducedMotion} onCheckedChange={(v) => updateSettings({ reducedMotion: v })} />
+            </label>
+            <label className="flex items-center justify-between text-sm">
+              High contrast
+              <Switch checked={!!settings.highContrast} onCheckedChange={(v) => updateSettings({ highContrast: v })} />
+            </label>
           </CardContent>
         </Card>
 
         <Card className="glass">
-          <CardHeader><CardTitle>Focus defaults</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="font-display">Focus defaults</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <label className="flex items-center justify-between text-sm">
               Focus minutes
@@ -124,15 +206,11 @@ export default function SettingsPage() {
               Notifications
               <Switch checked={settings.notifications} onCheckedChange={(v) => updateSettings({ notifications: v })} />
             </label>
-            <label className="flex items-center justify-between text-sm">
-              Compact mode
-              <Switch checked={settings.compactMode} onCheckedChange={(v) => updateSettings({ compactMode: v })} />
-            </label>
           </CardContent>
         </Card>
 
         <Card className="glass">
-          <CardHeader><CardTitle>Data</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="font-display">Data</CardTitle></CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             <Button onClick={download}>Export JSON</Button>
             <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 h-10 text-sm font-medium hover:bg-[var(--surface-3)]">
@@ -162,7 +240,7 @@ export default function SettingsPage() {
         </Card>
 
         <Card className="glass">
-          <CardHeader><CardTitle>Shortcuts</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="font-display">Shortcuts</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm text-[var(--fg-muted)]">
             <p><kbd className="rounded border border-[var(--border)] px-1.5">⌘/Ctrl</kbd> + <kbd className="rounded border border-[var(--border)] px-1.5">K</kbd> Command palette / capture</p>
             <p>Konami code unlocks a secret achievement</p>
@@ -171,7 +249,7 @@ export default function SettingsPage() {
 
         <Card className="glass">
           <CardHeader>
-            <CardTitle>XP & Achievements</CardTitle>
+            <CardTitle className="font-display">XP & Achievements</CardTitle>
             <CardDescription>Level {level} · {xp} XP</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">

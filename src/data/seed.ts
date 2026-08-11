@@ -29,14 +29,24 @@ export function createSeedData(): LifeOSData {
       name: "Simran",
       email: "simran@lifeos.app",
       theme: "system",
-      accent: "blue",
+      accent: "brass",
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
       focusMinutes: 25,
       breakMinutes: 5,
       dailyGoalTasks: 5,
       notifications: true,
       compactMode: false,
+      daylightMode: false,
+      serifDisplay: true,
+      reducedMotion: false,
+      highContrast: false,
     },
+    categories: [
+      { id: "cat_work", name: "Work", color: "#5C7A99", order: 0 },
+      { id: "cat_personal", name: "Personal", color: "#6B8F71", order: 1 },
+      { id: "cat_clients", name: "Clients", color: "#7A5C74", order: 2 },
+      { id: "cat_projects", name: "Projects", color: "#C9A227", order: 3 },
+    ],
     xp: 2450,
     level: 12,
     dailyStreak: 7,
@@ -368,11 +378,14 @@ export function createSeedData(): LifeOSData {
     notes: [
       {
         id: noteArch,
-        title: "LifeOS Architecture",
-        content: `# LifeOS Architecture
+        title: "Ledger architecture",
+        content: `# Ledger architecture
 
 ## Storage
 LocalStorage adapter today → Supabase later. UI never talks to storage directly.
+
+## Design
+Fraunces display · Public Sans body · Brass accent · Ink palette categories.
 
 ## Modules
 - Tasks, Calendar, Meetings, Notes
@@ -390,6 +403,7 @@ store.addTask({ title: "..." });
 See [[Daily Operating Rhythm]] for routines.
 `,
         folderId: "fld_work",
+        categoryId: "cat_projects",
         tags: ["architecture", "product"],
         pinned: true,
         favorite: true,
@@ -412,6 +426,7 @@ See [[Daily Operating Rhythm]] for routines.
 > Protect mornings. Meetings after lunch.
 `,
         folderId: "fld_personal",
+        categoryId: "cat_personal",
         tags: ["habits", "systems"],
         pinned: true,
         backlinks: [noteArch],
@@ -423,6 +438,7 @@ See [[Daily Operating Rhythm]] for routines.
         title: "Meeting notes template",
         content: `## Agenda\n- \n\n## Notes\n\n## Action items\n- [ ] `,
         folderId: "fld_work",
+        categoryId: "cat_work",
         tags: ["template"],
         backlinks: [],
         createdAt: past(20),
@@ -433,6 +449,7 @@ See [[Daily Operating Rhythm]] for routines.
         title: "Product ideas dump",
         content: `- Voice-to-task\n- OCR whiteboard → notes\n- Knowledge graph view\n- Email-to-task forwarding`,
         folderId: "fld_ideas",
+        categoryId: "cat_projects",
         tags: ["ideas"],
         backlinks: [],
         createdAt: past(6),

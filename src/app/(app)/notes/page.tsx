@@ -12,6 +12,7 @@ import {
   Pin,
   Plus,
   Search,
+  Settings2,
   Star,
   StickyNote,
   Trash2,
@@ -26,6 +27,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input, Textarea } from "@/components/ui/input";
 import { EmptyState, PageHeader } from "@/components/ui/page";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { CategoriesManager } from "@/components/categories/categories-manager";
 import { cn } from "@/lib/utils";
 import type { Note } from "@/types";
 
@@ -42,6 +51,7 @@ function readingTimeMin(words: number) {
 export default function NotesPage() {
   const notes = useLifeOSStore((s) => s.notes);
   const folders = useLifeOSStore((s) => s.folders);
+  const categories = useLifeOSStore((s) => s.categories);
   const addNote = useLifeOSStore((s) => s.addNote);
   const updateNote = useLifeOSStore((s) => s.updateNote);
   const deleteNote = useLifeOSStore((s) => s.deleteNote);
@@ -49,6 +59,8 @@ export default function NotesPage() {
   const [folderId, setFolderId] = useState<string | "all" | "pinned" | "favorites" | "archived">(
     "all"
   );
+  const [categoryFilter, setCategoryFilter] = useState<string | "all">("all");
+  const [catOpen, setCatOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [tagDraft, setTagDraft] = useState("");
@@ -64,6 +76,7 @@ export default function NotesPage() {
         if (folderId === "archived") return !!n.archived;
         if (folderId !== "all" && n.folderId !== folderId) return false;
         if (folderId !== "archived" && n.archived) return false;
+        if (categoryFilter !== "all" && n.categoryId !== categoryFilter) return false;
         if (!q) return true;
         return (
           n.title.toLowerCase().includes(q) ||
@@ -75,7 +88,7 @@ export default function NotesPage() {
         if (!!a.pinned !== !!b.pinned) return a.pinned ? -1 : 1;
         return b.updatedAt.localeCompare(a.updatedAt);
       });
-  }, [notes, folderId, search]);
+  }, [notes, folderId, search, categoryFilter]);
 
   const selectedIdResolved =
     selectedId && filtered.some((n) => n.id === selectedId)
@@ -213,6 +226,43 @@ export default function NotesPage() {
         }
       />
 
+      {/* Ledger-style category chips */}
+      <div className="flex flex-wrap items-center gap-2">
+        {[...categories].sort((a, b) => a.order - b.order).map((c) => {
+          const count = notes.filter((n) => n.categoryId === c.id && !n.archived).length;
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => setCategoryFilter((f) => (f === c.id ? "all" : c.id))}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm transition",
+                categoryFilter === c.id
+                  ? "bg-[var(--accent-soft)] text-[var(--fg)]"
+                  : "bg-[var(--surface)] text-[var(--fg-muted)] hover:bg-[var(--surface-2)]"
+              )}
+            >
+              <span className="ink-dot" style={{ background: c.color }} />
+              {c.name}
+              <span className="font-mono text-[11px] opacity-70">{count}</span>
+            </button>
+          );
+        })}
+        <Dialog open={catOpen} onOpenChange={setCatOpen}>
+          <DialogTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <Settings2 className="h-3.5 w-3.5" /> Categories
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="sr-only">Categories</DialogTitle>
+            </DialogHeader>
+            <CategoriesManager />
+          </DialogContent>
+        </Dialog>
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-[200px_260px_1fr]">
         {/* Folders */}
         <Card className="h-fit lg:sticky lg:top-4">
@@ -315,6 +365,11 @@ export default function NotesPage() {
                         <div className="flex items-center gap-1.5">
                           {n.pinned && <Pin className="h-3 w-3 text-[var(--accent)]" />}
                           {n.favorite && <Star className="h-3 w-3 fill-amber-400 text-amber-400" />}
+                          {n.meetingId && (
+                            <span className="rounded bg-[var(--accent-soft)] px-1 text-[10px] text-[var(--accent)]">
+                              mtg
+                            </span>
+                          )}
                           <p className="truncate text-sm font-medium">{n.title || "Untitled"}</p>
                         </div>
                         <p className="mt-0.5 line-clamp-2 text-xs text-[var(--fg-muted)]">
@@ -408,6 +463,21 @@ export default function NotesPage() {
                     placeholder="Note title"
                   />
 
+                  {(selected.meetingId || (selected.taskIds && selected.taskIds.length > 0)) && (
+                    <div className="flex flex-wrap gap-2">
+                      {selected.meetingId && (
+                        <a href="/meetings">
+                          <Badge variant="default">Synced from Meeting minutes</Badge>
+                        </a>
+                      )}
+                      {selected.taskIds?.map((tid) => (
+                        <a key={tid} href="/tasks">
+                          <Badge variant="secondary">Linked task</Badge>
+                        </a>
+                      ))}
+                    </div>
+                  )}
+
                   <div className="flex flex-wrap items-center gap-2">
                     <select
                       className="h-8 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-xs"
@@ -422,6 +492,22 @@ export default function NotesPage() {
                       {folders.map((f) => (
                         <option key={f.id} value={f.id}>
                           {f.parentId ? `↳ ${f.name}` : f.name}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className="h-8 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-xs"
+                      value={selected.categoryId ?? ""}
+                      onChange={(e) =>
+                        updateNote(selected.id, {
+                          categoryId: e.target.value || undefined,
+                        })
+                      }
+                    >
+                      <option value="">No category</option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
                         </option>
                       ))}
                     </select>

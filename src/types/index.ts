@@ -1,6 +1,9 @@
 export type Priority = "urgent" | "high" | "medium" | "low" | "none";
 export type TaskStatus = "backlog" | "todo" | "in_progress" | "review" | "done" | "cancelled";
 export type ProjectStatus = "planning" | "active" | "on_hold" | "completed" | "archived";
+
+export type { Category } from "@/lib/ink";
+import type { Category } from "@/lib/ink";
 export type MeetingType =
   | "internal"
   | "client"
@@ -25,13 +28,15 @@ export type GoalCategory =
 export type HabitFrequency = "daily" | "weekly" | "monthly";
 export type ThemeMode = "light" | "dark" | "system";
 export type AccentColor =
+  | "brass"
   | "blue"
   | "violet"
   | "emerald"
   | "rose"
   | "amber"
   | "cyan"
-  | "orange";
+  | "orange"
+  | "plum";
 
 export interface Subtask {
   id: string;
@@ -66,9 +71,14 @@ export interface Task {
   actualMinutes?: number;
   tags: string[];
   category?: string;
+  categoryId?: string;
   projectId?: string;
   milestoneId?: string;
   parentId?: string;
+  /** Cross-links */
+  meetingId?: string;
+  noteId?: string;
+  eventId?: string;
   subtasks: Subtask[];
   dependencies: string[];
   dueDate?: string;
@@ -98,6 +108,15 @@ export interface CalendarEvent {
   reminder?: boolean;
 }
 
+export interface MeetingActionItem {
+  id: string;
+  text: string;
+  done: boolean;
+  assignee?: string;
+  /** Task created from this action item */
+  taskId?: string;
+}
+
 export interface Meeting {
   id: string;
   title: string;
@@ -109,10 +128,13 @@ export interface Meeting {
   agenda: string[];
   notes?: string;
   participants: string[];
-  actionItems: { id: string; text: string; done: boolean; assignee?: string }[];
+  actionItems: MeetingActionItem[];
   followUps: string[];
   linkedTaskIds: string[];
   linkedProjectId?: string;
+  linkedNoteId?: string;
+  eventId?: string;
+  categoryId?: string;
   template?: string;
   createdAt: string;
 }
@@ -128,11 +150,16 @@ export interface Note {
   title: string;
   content: string;
   folderId?: string;
+  categoryId?: string;
   tags: string[];
   pinned?: boolean;
   favorite?: boolean;
   archived?: boolean;
   backlinks: string[];
+  /** Cross-links */
+  meetingId?: string;
+  taskIds?: string[];
+  projectId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -294,6 +321,12 @@ export interface UserSettings {
   wallpaper?: string;
   notifications: boolean;
   compactMode: boolean;
+  /** Ledger warm paper cream instead of cool light */
+  daylightMode?: boolean;
+  /** Larger serif display headings */
+  serifDisplay?: boolean;
+  reducedMotion?: boolean;
+  highContrast?: boolean;
 }
 
 export interface FocusSession {
@@ -310,6 +343,7 @@ export interface LifeOSData {
   meetings: Meeting[];
   notes: Note[];
   folders: NoteFolder[];
+  categories: Category[];
   journal: JournalEntry[];
   projects: Project[];
   goals: Goal[];

@@ -52,6 +52,8 @@ import type { CalendarEvent, Meeting, Task } from "@/types";
 const CALENDAR_COLORS: Record<string, string> = {
   Focus: "#3b82f6",
   Work: "#8b5cf6",
+  Meetings: "#a855f7",
+  Tasks: "#f59e0b",
   Health: "#10b981",
   Birthdays: "#f43f5e",
   Personal: "#06b6d4",
@@ -101,10 +103,19 @@ export default function CalendarPage() {
   // ponytail: recompute per render; React Compiler / small lists make memoizing the day scan unnecessary
   function itemsForDay(day: Date): CalItem[] {
     const list: CalItem[] = [];
+    const meetingIdsOnEvents = new Set(
+      filteredEvents.filter((e) => e.meetingId).map((e) => e.meetingId!)
+    );
+    const taskIdsOnEvents = new Set(
+      filteredEvents.filter((e) => e.taskId).map((e) => e.taskId!)
+    );
+
     for (const e of filteredEvents) {
       if (isSameDay(parseISO(e.start), day)) list.push({ kind: "event", data: e });
     }
+    // Skip meetings already represented by a linked calendar event (avoids duplicates)
     for (const m of meetings) {
+      if (meetingIdsOnEvents.has(m.id)) continue;
       if (
         isSameDay(parseISO(m.start), day) &&
         matchesSearch(`${m.title} ${m.type}`, search)
@@ -113,6 +124,7 @@ export default function CalendarPage() {
       }
     }
     for (const t of tasks) {
+      if (taskIdsOnEvents.has(t.id)) continue;
       if (
         t.dueDate &&
         t.status !== "done" &&
@@ -201,7 +213,11 @@ export default function CalendarPage() {
       color: CALENDAR_COLORS[form.calendar] || "#3b82f6",
       reminder: true,
     });
-    toast.success("Event added");
+    toast.success(
+      /meet/i.test(form.calendar)
+        ? "Event added · synced to Meetings"
+        : "Event added"
+    );
     setOpen(false);
     setForm({
       title: "",
@@ -276,9 +292,10 @@ export default function CalendarPage() {
                       value={form.calendar}
                       onChange={(e) => setForm({ ...form, calendar: e.target.value })}
                     >
-                      {["Work", "Focus", "Personal", "Health", "Birthdays"].map((c) => (
+                      {["Meetings", "Work", "Focus", "Personal", "Health", "Tasks", "Birthdays"].map((c) => (
                         <option key={c} value={c}>
                           {c}
+                          {c === "Meetings" ? " (syncs to Meetings)" : ""}
                         </option>
                       ))}
                     </select>
@@ -340,25 +357,43 @@ export default function CalendarPage() {
       <Card className="overflow-hidden">
         <CardContent className="p-4 sm:p-5">
           <Tabs value={view} onValueChange={setView}>
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" onClick={() => nav(-1)} aria-label="Previous">
+            <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <Button variant="ghost" size="icon" onClick={() => nav(-1)} aria-label="Previous">
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="icon" onClick={() => nav(1)} aria-label="Next">
+                <h2 className="font-display min-w-[10ch] text-center text-2xl font-semibold tracking-tight sm:text-3xl">
+                  {label}
+                </h2>
+                <Button variant="ghost" size="icon" onClick={() => nav(1)} aria-label="Next">
                   <ChevronRight className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm" onClick={goToday}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={goToday}
+                  className="ml-1 rounded-lg"
+                >
                   Today
                 </Button>
-                <h2 className="font-display text-lg font-semibold sm:text-xl">{label}</h2>
               </div>
-              <TabsList>
-                <TabsTrigger value="month">Month</TabsTrigger>
-                <TabsTrigger value="week">Week</TabsTrigger>
-                <TabsTrigger value="day">Day</TabsTrigger>
-                <TabsTrigger value="agenda">Agenda</TabsTrigger>
-              </TabsList>
+              <div className="flex flex-wrap items-center gap-2">
+                <TabsList className="bg-[var(--surface-2)]">
+                  <TabsTrigger value="month">Month</TabsTrigger>
+                  <TabsTrigger value="week">Week</TabsTrigger>
+                  <TabsTrigger value="day">Day</TabsTrigger>
+                  <TabsTrigger value="agenda">Agenda</TabsTrigger>
+                </TabsList>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setForm((f) => ({ ...f, date: format(selected, "yyyy-MM-dd") }));
+                    setOpen(true);
+                  }}
+                >
+                  <Plus className="h-4 w-4" /> Event
+                </Button>
+              </div>
             </div>
 
             <TabsContent value="month" className="mt-0">
