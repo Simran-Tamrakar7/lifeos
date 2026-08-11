@@ -65,12 +65,13 @@ export function Sidebar() {
       )}
     >
       <div className="flex items-center gap-3 px-4 py-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--accent)] text-sm font-bold text-white shadow-lg shadow-[var(--accent)]/30">
+        {/* ponytail: fixed LifeOS blue mark — not accent/brass */}
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#2563eb] text-sm font-bold text-white shadow-lg shadow-[#2563eb]/30">
           L
         </div>
         {!collapsed && (
           <div className="min-w-0">
-            <p className="font-display text-lg font-semibold leading-none tracking-tight">LifeOS</p>
+            <p className="text-lg font-semibold leading-none tracking-tight">LifeOS</p>
             <p className="mt-1 text-[11px] text-[var(--fg-muted)]">
               Lvl {level} · {xp} XP
             </p>
